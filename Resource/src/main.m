@@ -9,12 +9,10 @@ function main(directory)
 
     %set default parameters
     if(~exist('directory'))
-        directory = '../input_image/';
+        directory = '../input_image/road/';
     end
     
-    %
     % Load images
-    %
     disp('Load images from directory');
     images = [];
     exposureTimes = [];
@@ -62,14 +60,14 @@ function main(directory)
     end
 
     % Calculate the camera response curve by gsolve.m
-    disp('Calculate camera response function');
+    disp('Calculate camera response curve');
     g = zeros(256,3);
     lnE = zeros(sampleNumPixels, imgColorChannel);
     % Weight function
     weight = zeros(1, 256);
     weight(1 : 128) = (1 : 128);
     weight(129 : 256) = (128 : -1 : 1);
-    lamdba = 10;
+    lamdba = 50;
     for colorChannel = 1 : imgColorChannel
         [g(:,colorChannel), lnE(:, colorChannel)] = gsolve(sImage{colorChannel}, lnDelta_t, lamdba, weight);
     end
@@ -99,12 +97,15 @@ function main(directory)
     
     % Write HDR image into file
     imageHDR = reshape(imageHDR, imgHeight, imgWidth, imgColorChannel);
-    %write_rgbe(imageHDR, 'Image.hdr');
+    write_rgbe(imageHDR, 'image.hdr');
 
     % Tone Mapping
     imgToneMapping = tongMapping(imageHDR, 'global');
-    %write_rgbe(imgTMO, ['_tone_mapped.hdr']);
-    imwrite(imgToneMapping, ['toneMapping.png']);
-    
+    write_rgbe(imageHDR, ['global_toneMapping.hdr']);
+    imwrite(imgToneMapping, ['global_toneMapping.png']);
+    imgToneMapping = tongMapping(imageHDR, 'local');
+    write_rgbe(imageHDR, ['local_toneMapping.hdr']);
+    imwrite(imgToneMapping, ['local_toneMapping.png']);
+
 end
 
